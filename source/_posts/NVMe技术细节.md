@@ -3,7 +3,8 @@ title: NVMe规范与技术细节
 tag: [NVMe]
 index_img: /img/nvme.png
 date: 2024-12-05 14:00:00
-category: 工具与框架
+updated: 2024-12-06 16:00:00
+category: 技术调研
 ---
 
 # NVMe技术细节
@@ -13,6 +14,7 @@ category: 工具与框架
   - [2 队列管理 Queue Manage](#2-队列管理-queue-manage)
   - [3 命令仲裁机制 Arbitration](#3-命令仲裁机制-arbitration)
   - [4 寻址模型PRP和SGL解析](#4-寻址模型prp和sgl解析)
+  - [mq-deadline调度器原理](#mq-deadline调度器原理)
 
 参考自*编程随笔NVMe专题*
 
@@ -72,3 +74,47 @@ category: 工具与框架
   > PRP和SGL是描述Host内存物理空间的两种方式, 本质的不同是：PRP必须是物理页对齐的, 而SGL则可以表述任意的物理空间
   ![2024-12-05-14-19-35-NVMe技术](https://raw.githubusercontent.com/Yee686/Picbed/main/2024-12-05-14-19-35-NVMe技术.png)
   ![2024-12-05-14-23-28-NVMe技术](https://raw.githubusercontent.com/Yee686/Picbed/main/2024-12-05-14-23-28-NVMe技术.png)
+
+## mq-deadline调度器原理
+
+- [源码链接](https://github.com/torvalds/linux/blob/master/block/mq-deadline.c)
+- 适配block层多队列机制, 将IO分为read和write两类, 每类IO都有一个红黑树和fifo队列, 红黑树用于将IO按照LBA排序方便查找, fifo队列用于顺序保证, 并提供超时保障. 穿透性IO发送至dispatch队列
+
+``` c++
+    struct dd_per_prio {
+        struct list_head dispatch;
+        struct rb_root sort_list[DD_DIR_COUNT];
+        struct list_head fifo_list[DD_DIR_COUNT];
+        /* Position of the most recently dispatched request. */
+        sector_t latest_pos[DD_DIR_COUNT];
+        struct io_stats_per_prio stats;
+    };   
+
+    struct deadline_data {
+        /*
+        * run time data
+        */
+
+        struct dd_per_prio per_prio[DD_PRIO_COUNT];
+
+        /* Data direction of latest dispatched request. */
+        enum dd_data_dir last_dir;
+        unsigned int batching;		/* number of sequential requests made */
+        unsigned int starved;		/* times reads have starved writes */
+
+        /*
+        * settings that change how the i/o scheduler behaves
+        */
+        int fifo_expire[DD_DIR_COUNT];
+        int fifo_batch;
+        int writes_starved;
+        int front_merges;
+        u32 async_depth;
+        int prio_aging_expire;
+
+        spinlock_t lock;
+    };
+```
+
+- 一个块设备对应一个deadline_data, read可以抢占write的分发, 当达到饥饿starved限制时必须处理write.mq-deadline调度器会优先去批量式地分发IO而不去管IO的到期时间, 当批量分发到一定的个数再关心到期时间, 然后去分发即将到期的IO.[mq-deadline调度器原理及源码分析](https://www.cnblogs.com/kanie/p/15252921.html)
+- ![2024-12-06-15-23-16-NVMe技术](https://raw.githubusercontent.com/Yee686/Picbed/main/2024-12-06-15-23-16-NVMe技术.png)
