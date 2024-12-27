@@ -1,13 +1,56 @@
 ---
-title: RocksDB的Compaction分析
-tag: [RocksDB, Compaction]
+title: RocksDB的Compaction/Flush分析
+tag: [RocksDB, Compaction, Flush, KV store, LSM-tree]
 index_img: /img/rocksdb.png
 date: 2024-12-17 20:33:00
-updated: 2024-12-17 21:00:00
+updated: 2024-12-27 21:50:00
 category: 代码分析
 ---
 
 # RocksDB关键流程
+
+## Flush流程
+
+### 后台Flush作业
+
+- 调度Flush作业流程与compaction类似: `DBImpl::BGWorkFlush`-->`DBImpl::BackgroundCallFlush`-->`DBImpl::BackgroundFlush`-->`DBImpl::FlushMemTablesToOutputFiles`-->`DBImpl::FlushMemTableToOutputFile`
+- `DBImpl::BGWorkFlush(void* arg)`: 开启后台Flush作业
+  - 转发到`DBImpl::BackgroundCallFlush(Env::Priority thread_pri)`
+    - 调用`DBImpl::BackgroundFlush()`
+      - 调用`DBImpl::FlushMemTablesToOutputFiles()`
+        - 调用`DBImpl::FlushMemTableToOutputFile()`
+  - 检查状态
+  - 调用`DBImpl::MaybeScheduleFlushOrCompaction()`
+
+### Flush作业主控流程
+
+- `DBImpl::FlushMemTableToOutputFile`: 将Memtable刷盘, 核心流程
+  - 创建`FlushJob flush_job`
+  - 调用成员方法`FlushJob::PickMemTable()`, 选择需要刷盘的memtable
+    - 获取该列族的imm_(imutable memtable)列表, 调用`MemTableList::PickMemtablesToFlush(...)`
+      - 遍历`current_->memlist_`, 将未flush的(!flush_in_grogress_)的memtable加入到`mems_`中, `mems_`中按时间升序排列
+      - 不管`mems_`中有多少个memtable, 均有第一个`memtable`的`edit_`来记录该次flush的元数据
+  - 调用成员方法`FlushJob::Run(...)`, 启动刷盘
+    - 首先会检查是否需要`MemPurge()`, 即Memtable垃圾回收
+    > 将Immutable Memtable中过期内容清除, 将有效数据保存到新的memtable中, 旨在减少对SSD的写操作, 并降低写放大
+    - **执行`FlushJob::WriteLevel0Table()`, 执行刷盘**
+      - `memtables`保存所有mm的迭代器
+      - 设定`TableBuilderOptions tboptions`
+      - 调用`BuildTable()`, 生成L0层SSTable
+      - 调用`AddFile()`将生成文件加入当前`edit_`, 相当于注册到LSM树的L0层
+      - 调用`FlushJob::GetFlushJobInfo()`获得作业详细信息(包括file_path, table_properties), 并设置mems_队列的首个memtable
+    - 如果需要写最新版本MANIFEST, 会调用`MemtableList::TryInstallMemtableFlushResults(...)`
+  - 安装新版本`DBImpl::InstallSuperVersionAndScheduleWork`
+  - 通知完成Flush, 在`SstFileManagerImpl`注册生成的SSTable对象
+
+### BuildTable工作流程
+
+- 调用`NewWritableFile`申请可写文件`file`, 并设定IO优先级和LifetimeHint
+- 设置`WritableFileWriter`, 并调用`NewTableBuilder`, 与`CompactionJob::OpenCompactionOutputFile()`类似
+- 设置`MergeHelper`和用于KV迭代的`CompactionIterator`
+- 迭代`c_iter`, 调用`TableBuilder`的`Add(key, value)`将KV对加入l0层的`SSTable`中
+- 更新待刷新第一个Memtable的`FileMetaData`(保存整个FlushJob元数据)和入参`TableProperties`(生成L0层SSTable元数据)
+- 构建`OutputValidator`和`InternalIterator`检查新生成SSTable的有效性
 
 ## Compactoion流程
 
@@ -63,15 +106,7 @@ category: 代码分析
   env_->Schedule(&DBImpl::BGWorkCompaction, ca, Env::Priority::LOW, this, &DBImpl::UnscheduleCompactionCallback);
   ```
 
-### 后台Flush/Compaction作业
-
-- `DBImpl::BGWorkFlush(void* arg)`: 开启后台Flush作业
-  - 转发到`DBImpl::BackgroundCallFlush(Env::Priority thread_pri)`
-    - 调用`DBImpl::BackgroundFlush()`
-      - 调用`DBImpl::FlushMemTablesToOutputFiles()`
-        - 调用`DBImpl::FlushMemTableToOutputFile()`
-  - 检查状态
-  - 调用`DBImpl::MaybeScheduleFlushOrCompaction()`
+### 后台Compaction作业
 
 - `DBImpl::BGWorkCompaction(void* arg)`: 开启后台Compaction作业
   - 将`arg`转为`CompactionArg`, 并从中拿到`prepicked_compaction`, 通过`BackgroundCallCompaction`传递
@@ -103,7 +138,7 @@ category: 代码分析
 
 ### Compaction子合并
 
-- `CompactionJob::ProcessKeyValueCompaction()`: 调用filter, 遍历输入KV并执行compaction
+- **`CompactionJob::ProcessKeyValueCompaction()`: 调用filter, 遍历输入KV并执行compaction**
   - 如果有`CompactionService`(可以理解为使用外部Compaction算法)则调用`CompactionJob::ProcessKeyValueCompactionWithCompactionService()`, 执行成功则返回;否则使用自带的Compaction算法, 即主分支
   - 构建`InternalIterator`, 指针对象`raw_input`和`input`
   - 构建`MergeHelper`
@@ -112,20 +147,43 @@ category: 代码分析
   - **定义`CompactionFileOpenFunc`/`CompactionFileCloseFunc`**
     - 转发到`CompactionJob::OpenCompactionOutputFile()`
     - 转发到`CompactionJob::FinishCompactionOutputFile()`
-  - 开始迭代合并
+  - **开始循环迭代**, 每次迭代增加一个KV对文件中
     - 调用`sub_compact->AddToOutput(*c_iter, open_file_func, close_file_func)`, 将`c_iter`的KV对加到`Current`输出组中 
       - `SubcompactionState::AddToOutput()`转发到`Current().AddToOutput(...)`, `Current()`返回指向`class CompactionOutputs`对象的指针
+        - 将KV对加入validator
+        - 将KV对通过table builder加入SST, `builder_->Add(key, value)`
+        - 更新FileMetaData的最大最小键
     - `c_iter->Next()`迭代到下一KV-pair
   - 状态检查, 再次执行`sub_compact->CloseCompactionFiles()`完成收尾工作
 
 ### Compaction文件读写
 
-- `CompactionJob::OpenCompactionOutputFile(...)`
+- **`CompactionJob::OpenCompactionOutputFile(...)`**
   - 调用`read_write_util`中的`NewWritableFile`, 转发到`fs->NewWritableFile`, 创建一个制定了文件名的新文件对象, 用指针`writable_file`保存
   - 设置该文件的`FileMetaData`, 并调用`outputs.AddOutput`加入当前输出队列中
   - 通过文件系统接口层中`class FSWritableFile`提供的接口, 设置`writable_file`的IO优先级\`lifetime_hint`等信息
   - 调用`CompactionOutputs::AssignFileWriter()`设置写入器, 设置`TableBuilderOptions`, 再通过`CompactionOutputs::NewBuilder()`创建`TableBuilder`对象
-- `Status CompactionJob::FinishCompactionOutputFile(...)`
+- **`Status CompactionJob::FinishCompactionOutputFile(...)`**
+- `TableBuilder::Add(K, V)`向table中添加KV(以默认的`Block_based_table_builder::Add`为例)
+  - 先检查`Key`的`ValueType`
+  - 检查是否需要`Flush()`(将缓冲的KV对刷入文件中)
+    - 需要则调用`BlockBasedTableBuilder::Flush()`, 主逻辑转发到`BlockBasedTableBuilder::WriteBlock()`
+    - 先通过`block->Finish()`关闭当前block
+    - 调用`BlockBasedTableBuilder::CompressAndVerifyBlock`尝试压缩block内容
+    - 调用`BlockBasedTableBuilder::WriteMaybeCompressedBlock`写入数据块
+      - 核心流程`r->file->Append(block_contents)`, 调用`WritableFileWriter::Append(...)`
+        - **这里用到了`use_direct_io()`判断是否是直接IO, 我的大部分实验设置为direct**, 如果需要验证数据有效性还是会先写到一个buffer用于计算校验和
+        - `FSWritableFile::PrepareWrite`写前准备工作, 通过预分配空间可以减少文件碎片, 或者避免文件系统过度预分配带来的浪费
+        - 核心是调用`buf_.Append(src, left)`, `class AlignedBuffer`根据对齐需求来管理一个缓冲区, 主要用于`direct io`场景, `Append`方法使用`memcpy`复制到buffer中
+        - `WritableFileWriter::Flush()`: 将内存中数据写入文件系统/设备
+          - 有缓冲写`WriteBuffered(...)`, **使用`writable_file_->Append()`写底层文件**
+          - 无缓冲写`WriteDirect(...)`, **使用`writable_file_->PositionedAppend()`写底层文件**
+          - 调用`writable_file_->Flush(...)`, 这是底层文件系统接口
+      - 调用`ComputeBuiltinChecksumWithLastByte`处理`checksum`
+      - 调用`InsertBlockInCompressedCache`, 将压缩后的block_content加入缓存
+  - `r->data_block.AddWithLastKey`, 调用`BlockBuilder::AddWithLastKey`转发到`BlockBuilder::AddWithLastKeyImpl`, 主要是操作对应`block builder`的`buffer_`(string类型), 通过`append`方法将`key`写入`buffer_`中
+  - `r->last_key.assign(key.data(), key.size())`, 更新`last_key`(string类型)值
+  - 更新`TableProperties`, 包括`num_entries`/`raw_key_size`/`raw_value_size`
 
 ### Flush/Compaction相关数据结构
 
@@ -148,9 +206,34 @@ category: 代码分析
     - `AggregateCompactionStats`聚合合并状态
     - `Slice SmallestUserKey()`/`Slice LargestUserKey()`获取用户键
 
+- `VersionEdit::AddFile(...)`: 向LSM树某一层添加文件
+
+## 工具方法
+
+- `int sstableKeyCompare(const Comparator* user_cmp, const InternalKey& a, const InternalKey& b)`
+  - 先直接调用`user_cmp->CompareWithoutTimestamp(a.user_key(), b.user_key())`, 指比较两个`InternalKey`的`UserKey`部分, 并且不考虑时间戳
+  - 如果不相等就直接返回, 如果先等则调用`ExtractInternalKeyFooter()`, 比较两个键的Footer, Footer就是`InternalKey`的最后8字节, 即`SequenceNumber`和`ValueType`的组合
+  > `RocksDB`中, `Internal Key`在默认情况下
+  > `| User Key (变长) | Sequence Number (7 字节) | Value Type (1 字节) |`
+  > 在启用了`User Defined Timestamp`
+  > `| User Key (变长) | Timestamp (变长) | Sequence Number (7 字节) | Value Type (1 字节) |`
+  > `Timestamp`用于支持基于时间戳的数据管理
+  > `Sequence Number`用于支持MVCC, 越大越新, 查询/合并时返回最新版本
+
+
+## RocksDB-ZenFS交互流程分析
+
+- `CompactionJob::OpenCompactionOutputFile(...)`-->调用FS的`FileSystem::NewWritableFile(...)`-->调用ZenFS的`ZenFS::OpenWritableFile(...)`-->通过新建`ZonedWritableFile`对象, 并返回对象指针, `ZonedWritableFile`继承自`public FSWritableFile`
+- `ZonedWritableFile`的`Append`方法在非`buffered`模式下, 调用`ZoneFile::Append`-->在对非活动分区写入或写入空间不够时调用`ZoneFile::AllocateNewZone()`分配新分区-->转发到`ZonedBlockDevice::AllocateIOZone(...)`执行分区分配逻辑
+- `ZoneFile`维护一个`ZoneExtent`指针队列, 每个`ZoneExtent`对应一个`Zone`, 每个`Zone`维护了写指针`wp_`/`WriteLifeTimeHint`/`capacity`等
+- `ZonedWritableFile::Append`与`ZonedWritableFile::PositionedAppend`
+  - 如前文所述, `Append`来自BufferedIO模式调用, `PisitionAppend`来自DirectIO模式调用
+  - 在ZenFS中, `PisitionAppend`强制保证在`wp_`处写入, 其余与`Append`一致, 转发到`zoneFile_->Append`
+  - 上层RocksDB会保证`Append`和`PositionAppend`只选择一种
+
 ## RocksDB-Table-build源码分析
 
-### 公共接口
+## 公共接口
 
 - `table.h`: 与sst相关的抽象类, 两种table
   - `Block-based table`: 默认table类型, 来自LevelDB
@@ -168,7 +251,7 @@ category: 代码分析
         - `Repairer::ConvertLogToTable()`: 通过`BuildTable()`间接调用, 在修复阶段时, 将log转为sst
         - 调用者有责任保持文件打开，并在关闭表构建器后关闭文件
 
-### 实现
+## 实现
 
 - `table\table_builder.h`: 
   - 声明`struct TableReaderOptions`和`struct TableBuilderOptions`
