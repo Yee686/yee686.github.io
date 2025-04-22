@@ -3,4 +3,6 @@ title: about
 layout: about
 ---
 
-## 研二在读, 努力成为一名后端工程师ing
+## WNLO研二在读
+
+### 关注新型固态盘ZNS SSD, 键值存储和对象存储

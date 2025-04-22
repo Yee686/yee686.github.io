@@ -38,7 +38,6 @@ math: true
 - Para-ZNS: Improving Small-zone ZNS SSDs Parallelism through Dynamic Zone Mapping (DATE 2024)
 - ZonesDB: Building Write-Optimized and Space-Adaptive Key-Value Store on Zoned Storage with Fragmented LSM Tree (TOS 2025)
 
-
 ---
 
 ### RocksDB 综述 (TOS 2021)
@@ -77,7 +76,6 @@ math: true
       - Manifest文件保存数据块当前状态信息，每当SSTable文件被改动时会触发写Manifest，生成版本信息
       - Current文件记录最新Manifest文件编号
     - 列族：与LevelDB不同之处，为RocksDB提供逻辑分区，不同列族之间共享WAL，有独立的memtable
-
 
 #### 3 资源优化
 
@@ -310,7 +308,7 @@ math: true
     - 通过引入一个读指针记录上次读取位置，判断是否是顺序读写，顺序读写则被认定为compaction
     - 每个chip维护一个IO优先队列，随机读写请求高于顺序读写请求
 
---- 
+---
 
 ### WALTZ (PVLDB 2023)：WAL写入优化
 
@@ -494,7 +492,7 @@ math: true
 
 ---
 
-### ZoneKV (DAC 2023) 
+### ZoneKV (DAC 2023)
 
 #### ZoneKV动机
 
@@ -520,7 +518,7 @@ math: true
 - 问题2：RAID保护机制提供芯片数据保护，但是为了适应奇偶校验存储开销和不规则的闪存块大小，使得zone capacity小于zone size；当zone大小改变其应用程序的可写空间也会发生变化
 - 设计2：将zone capacity与zone size保持一致，将存储管理的复杂性转移(?)至SSD；将奇偶校验与数据存储解耦，将SSD分为数据区域和奇偶校验区域；将不同大小的分区映射到多个的超级块上，不与存储奇偶校验的超级块重叠
 
-- 观察 
+- 观察
   - 大分区会导致不同生命周期数据混合，使得GC的数据迁移开销大
   - ![2024-09-18-15-42-52-ZNS_RocksDB](https://raw.githubusercontent.com/Yee686/Picbed/main/2024-09-18-15-42-52-ZNS_RocksDB.png)
   - 小分区会导致可用空间下降，空间利用率降低；并且会使得GC频繁；
@@ -558,7 +556,7 @@ Para-ZNS同时关注芯片级并行性和平面并行性, 使用动态的分区�
 #### para-zns提出背景
 
 - 利用率建模: ZNS Zone的状态转换机制反映了分区的使用情况, 结合设备端的zone-die映射, 可以计算/预测die的利用率
-- 分区映射模式: 
+- 分区映射模式:
   - ![2024-12-18-15-33-09-ZNS_RocksDB](https://raw.githubusercontent.com/Yee686/Picbed/main/2024-12-18-15-33-09-ZNS_RocksDB.png)
   - 小分区ZNS只用到了部分die级别的并行性, 有很多工作着眼于主机端软件优化, 使得尽可能多同时写入非冲突区域(映射到不同die的分区)
   - **问题1**: 主机端无法看到zone-die的映射关系, 导致主机端并行性提高但开销也高
