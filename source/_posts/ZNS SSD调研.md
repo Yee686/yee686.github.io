@@ -180,7 +180,7 @@ math: true
 - 在写入文件时，小尺寸zone会使得写入的数据分布在多个zone中，比写入单个zone应该有更高的吞吐量
 - ![2024-05-10-14-47-25-ZNS_RocksDB](https://raw.githubusercontent.com/Yee686/Picbed/main/2024-05-10-14-47-25-ZNS_RocksDB.png)
 - **并行写入机制**:SST-sized  Chunk-sized
-  > SST-sized(如1024M)-->Chunk-sized(如1M)，较大的缓冲区大小会影响并行性，选用chunk级别的缓冲区不用等待IO结束直接将数据由单个线程在后台写入，然而可能会导致zone中由更多的未写入空间
+  > SST-sized(如1024M) $\rightarrow$ Chunk-sized(如1M)，较大的缓冲区大小会影响并行性，选用chunk级别的缓冲区不用等待IO结束直接将数据由单个线程在后台写入，然而可能会导致zone中由更多的未写入空间
 - **基于SST级别的zone管理策略**--提高内部并行性并减少zone空间浪费
   - ![2024-05-10-15-07-28-ZNS_RocksDB](https://raw.githubusercontent.com/Yee686/Picbed/main/2024-05-10-15-07-28-ZNS_RocksDB.png)
   - 全局空闲队列：所有的空闲zone
