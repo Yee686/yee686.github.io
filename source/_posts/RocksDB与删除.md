@@ -76,7 +76,7 @@ math: true
     - TTL驱动DD的文件选择, 优先选择TTL到期的文件以满足用户要求
   - 总体规则: 当两个文件在SD/DD模式优先级相同时则选择具有最旧删除墓碑的SSTable, 如果SO模式下优先级相同则选择预估失效数最多的SSTable。
 
-## Zone-Aware Persistent Deletion for Key-Value Store Engine (2024 NVMSA)
+## Zone-Aware Persistent Deletion for Key-Value Store Engine (2024 NVMSA 西交)
 
 - 用于KV存存储的分区感知的删除持久化
 ![2025-03-24-19-13-46-RocksDB-Delete](https://raw.githubusercontent.com/Yee686/Picbed/main/2025-03-24-19-13-46-RocksDB-Delete.png)
@@ -105,15 +105,31 @@ math: true
       - 综合考虑当前重叠情况和重叠的增加
 - 性能分析
   - 合并操作的数据写开销基本于RocksDB持平
-  - ![合并写开销](https://raw.githubusercontent.com/Yee686/Picbed/main/2025-03-31-20-03-11-RocksDB-Delete.png)
+  - ![2025-03-31-20-03-11-RocksDB-Delete](https://raw.githubusercontent.com/Yee686/Picbed/main/2025-03-31-20-03-11-RocksDB-Delete.png)
   - ZNS SSD上的GC写开销大幅降低
-  - ![GC写开销](https://raw.githubusercontent.com/Yee686/Picbed/main/2025-03-31-20-04-33-RocksDB-Delete.png)
+  - ![2025-03-31-20-04-33-RocksDB-Delete](https://raw.githubusercontent.com/Yee686/Picbed/main/2025-03-31-20-04-33-RocksDB-Delete.png)
+
+![面向OCSSD的删除感知垃圾回收机制中版本信息的记录](https://raw.githubusercontent.com/Yee686/Picbed/main/2025-04-01-16-24-00-RocksDB-Delete.png)
+
+## Enabling a deleted-key-value-aware garbage collection strategy for LSM-tree on OCSSD (2024 APCCAS 台湾清华)
+
+- 动机: OCSSD的异地更新机制在处理删除操作时, 给数据擦写带来了挑战, 很长时间内并未被删除, 文章提出了删除键值感知的垃圾回收策略(针对闪存页的垃圾回收), 确保指定删除数据在数据恢复阶段被完全擦除
+- 总体设计: 在Wisckey之上来做的设计, Key放在SSTable, Value放在Value Log中; 将包含删除键值的数据标记为敏感数据, 垃圾回收时邮箱选择敏感数据
+  - 挑战1: 跟踪不同版本数据的全部位置
+  - 挑战2: 如何降低垃圾回收开销
+- 具体设计:
+  - 版本跟踪: 引入`Version Table`, 记录键信息\冷热\版本号和键对应值在ValueLog内的地址\值得大小; 减少对LSM树依赖(?这读数据流程会变成什么样)
+  - 冷热分离: 两个独立Memtable分别装冷热数据, 利用布隆过滤器区分冷热
+  - 删除感知的垃圾回收:
+    - 传统做法: 选择失效闪存页面最多的闪存块来做垃圾回收
+    - 感知做法: 通过VersionTable定位到删除KV所在表, 找到LBA和对应长度, 如何传递给闪存定位到物理地址, 垃圾回收时优先选择这些块
 
 ## 参考文献
 
 - [RocksDB-删除机制研究--鲁凯](https://emperorlu.github.io/Delete-in-Rocksdb/)
-- Lethe: A Tunable Delete-Aware LSM Engine (删除感知的LSM引擎)
-- Zone-Aware Persistent Deletion for Key-Value Store Engine (与ZNS SSD结合)
+- Lethe: A Tunable Delete-Aware LSM Engine 删除感知的LSM引擎
+- Zone-Aware Persistent Deletion for Key-Value Store Engine 与ZNS SSD结合
 - Constructing and Analyzing the LSM Compaction Design Space
 - X-Engine: An Optimized Storage Engine for Large-scale E-commerce Transaction Processing
 - MyRocks: LSM-tree database storage engine serving Facebook’s social graph
+- Enabling a deleted-key-value-aware garbage collection strategy for LSM-tree on OCSSD
