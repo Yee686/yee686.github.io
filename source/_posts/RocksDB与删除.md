@@ -105,9 +105,9 @@ math: true
       - 综合考虑当前重叠情况和重叠的增加
 - 性能分析
   - 合并操作的数据写开销基本于RocksDB持平
-  - ![2025-03-31-20-03-11-RocksDB-Delete](https://raw.githubusercontent.com/Yee686/Picbed/main/2025-03-31-20-03-11-RocksDB-Delete.png)
+  - ![合并写开销](https://raw.githubusercontent.com/Yee686/Picbed/main/2025-03-31-20-03-11-RocksDB-Delete.png)
   - ZNS SSD上的GC写开销大幅降低
-  - ![2025-03-31-20-04-33-RocksDB-Delete](https://raw.githubusercontent.com/Yee686/Picbed/main/2025-03-31-20-04-33-RocksDB-Delete.png)
+  - ![GC写开销](https://raw.githubusercontent.com/Yee686/Picbed/main/2025-03-31-20-04-33-RocksDB-Delete.png)
 
 ## 参考文献
 
