@@ -3,9 +3,9 @@
 ## Source: https://github.com/hexojs/hexo/
 
 # Site
-title: Yee · 存储系统笔记
-subtitle: '存储系统、RocksDB 与 ZNS SSD'
-description: '记录存储系统、RocksDB、ZNS SSD 与性能工程的源码分析、论文笔记和实践。'
+title: 读写之间
+subtitle: '让思考落盘，让实践回响'
+description: '读写之间：记录存储系统、RocksDB、ZNS SSD 与性能工程的源码分析、论文笔记和实践。'
 keywords: 存储系统,RocksDB,ZNS SSD,LSM-tree,KV Store,性能工程
 author: Yi Zhengye
 language: zh-CN
