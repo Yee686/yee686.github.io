@@ -13,6 +13,16 @@ layout: about
 - RocksDB、LSM-tree 与存储引擎源码
 - Linux 性能分析与工程工具链
 
+### 研究经历
+
+**2023—2026 · 硕士研究**
+曾在[智能存储与数据管理实验室（IDSM Lab）](http://idsm.wnlo.hust.edu.cn/index.htm)学习与研究。
+
+### 实习经历
+
+**2025 · 腾讯实习**
+参与[腾讯云智能媒资托管（SMH）](https://cloud.tencent.com/product/smh)相关业务；这段面向真实业务的工程实践，是一段非常宝贵的经历。
+
 ### 这个博客
 
 这里主要沉淀三类内容：源码分析、文献笔记和可复现实践。旧文会尽量标注更新时间与适用版本；欢迎通过 GitHub 交流与指正。

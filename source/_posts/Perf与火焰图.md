@@ -1,7 +1,7 @@
 ---
 title: Perf系统调优
 tag: [Perf, FlameGraph, Tuning]
-index_img: https://raw.githubusercontent.com/Yee686/Picbed/main/2025-04-22-20-11-10-Perf与火焰图.svg
+index_img: /img/covers/tools-practice.jpg
 date: 2025-04-22 20:00:00
 category: 工具与框架
 ---

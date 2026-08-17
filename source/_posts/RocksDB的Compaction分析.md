@@ -1,7 +1,8 @@
 ---
 title: RocksDB的Compaction/Flush分析
 tag: [RocksDB, Compaction, Flush, KV store, LSM-tree]
-index_img: /img/rocksdb.png
+index_img: /img/covers/code-analysis.jpg
+sticky: 2
 date: 2024-12-17 20:33:00
 updated: 2024-12-27 21:50:00
 category: 代码分析

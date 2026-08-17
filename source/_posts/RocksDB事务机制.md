@@ -1,7 +1,7 @@
 ---
 title: RocksDB事务机制
 tag: [RocksDB, Transaction, KV store, LSM-tree]
-index_img: /img/rocksdb.png
+index_img: /img/covers/code-analysis.jpg
 date: 2025-9-25 17:00:00
 updated: 2025-9-25 17:00:00
 category: 代码分析

@@ -1,7 +1,8 @@
 ---
 title: ZNS SSD与键值存储
 tag: [RocksDB, Compaction, Flush, KV store, LSM-tree, ZNS SSD]
-index_img: https://raw.githubusercontent.com/Yee686/Picbed/main/2024-05-11-16-24-13-ZNS_RocksDB.png
+index_img: /img/covers/research-notes.jpg
+sticky: 3
 date: 2024-05-20 20:50:00
 updated: 2025-04-22 20:50:00
 category: 文献笔记

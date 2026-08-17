@@ -1,7 +1,8 @@
 ---
 title: NVMeVirt模拟ZNS SSD
 tag: [RocksDB, Compaction, Flush, KV store, LSM-tree, ZNS SSD, NVMe]
-index_img: https://raw.githubusercontent.com/Yee686/Picbed/main/2024-05-31-16-26-43-NVMeVirt.png
+index_img: /img/covers/tools-practice.jpg
+sticky: 1
 date: 2024-06-10 20:50:00
 updated: 2024-10-16 20:50:00
 category: 工具与框架
