@@ -1,7 +1,7 @@
 ---
 title: EBS的发展历程(Fast 24 best paper)
 tag: [EBS, Distributed Storage]
-index_img: /img/covers/research-notes.jpg
+index_img: https://raw.githubusercontent.com/Yee686/Picbed/main/2024-04-02-17-05-16-云存储.png
 date: 2024-04-02 20:00:00
 category: 文献笔记
 math: true

@@ -1,7 +1,7 @@
 ---
 title: 频删场景下键值存储的性能优化
 tag: [RocksDB, Compaction, Flush, KV store, LSM-tree, ZNS SSD]
-index_img: /img/covers/research-notes.jpg
+index_img: https://raw.githubusercontent.com/Yee686/Picbed/main/2025-03-31-20-25-15-RocksDB-Delete.png
 date: 2025-03-31 20:50:00
 updated: 2025-03-31 20:50:00
 category: 文献笔记

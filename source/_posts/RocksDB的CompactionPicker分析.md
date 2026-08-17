@@ -1,7 +1,8 @@
 ---
 title: RocksDB的Compaction Picker分析
 tag: [RocksDB, Compaction, KV store, LSM-tree]
-index_img: /img/covers/code-analysis.jpg
+index_img: /img/covers/rocksdb-compaction-picker.jpg
+mermaid: true
 date: 2025-4-25 17:00:00
 updated: 2025-4-25 17:00:00
 category: 代码分析
@@ -13,7 +14,7 @@ category: 代码分析
 
 ## 抽象类`CompactionPicker`
 
-- 触发条件: 当`NeedCompaction()`返回`ture`时调用`PickCompation()`找到哪里需要合并, 并往哪一层合并
+- 触发条件: 当`NeedCompaction()`返回`true`时调用`PickCompaction()`找到哪里需要合并, 并往哪一层合并
 - `class CompactionPicker`
   - **主要成员方法**
     - `virtual Compaction* PickCompaction(...) = 0`: 对指定列族的新Compaction选择level和input
@@ -44,6 +45,15 @@ category: 代码分析
     - `const InternalKeyComparator* const icmp_`: 内部键比较器
     - `std::set<Compaction*> level0_compactions_in_progress_`: L0层正在进行的合并
     - `std::unordered_set<Compaction*> compactions_in_progress_`: 正在进行的所有合并
+
+```mermaid
+flowchart TD
+  A["VersionStorageInfo"] --> B["NeedCompaction"]
+  B --> C["LevelCompactionPicker"]
+  C --> D["选择起始层输入文件"]
+  D --> E["扩展重叠范围"]
+  E --> F["生成 Compaction"]
+```
 
 ## 派生类`LevelCompactionPicker`
 

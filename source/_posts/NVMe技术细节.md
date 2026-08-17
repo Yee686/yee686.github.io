@@ -1,7 +1,7 @@
 ---
 title: NVMe规范与技术细节
 tag: [NVMe]
-index_img: /img/covers/research-notes.jpg
+index_img: /img/nvme.png
 date: 2024-12-05 14:00:00
 updated: 2024-12-06 16:00:00
 category: 技术调研

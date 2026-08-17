@@ -1,7 +1,7 @@
 ---
 title: Golang学习笔记
 tag: [golang]
-index_img: /img/covers/tools-practice.jpg
+index_img: /img/golang.png
 date: 2024-11-10 20:00:00
 category: 工具与框架
 ---

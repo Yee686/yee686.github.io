@@ -1,7 +1,8 @@
 ---
 title: NVMeVirt模拟ZNS SSD
 tag: [RocksDB, Compaction, Flush, KV store, LSM-tree, ZNS SSD, NVMe]
-index_img: /img/covers/tools-practice.jpg
+index_img: https://raw.githubusercontent.com/Yee686/Picbed/main/2024-05-31-16-26-43-NVMeVirt.png
+mermaid: true
 sticky: 1
 date: 2024-06-10 20:50:00
 updated: 2024-10-16 20:50:00
@@ -16,7 +17,7 @@ category: 工具与框架
 
 ### 1 ZenFS和RocksDB安装
 
-使用最新版本的RocksDB和ZenFS时，安装报错([如issue#288所示](https://github.com/westerndigitalcorporation/zenfs/issues/288))，原因时新版本的RocksDB更换了API而ZenFS未适配，使用RocksDB 8.11.3可以解决，直接按照README即可
+使用最新版本的RocksDB和ZenFS时，安装报错([如issue#288所示](https://github.com/westerndigitalcorporation/zenfs/issues/288))，原因是新版本的RocksDB更换了API而ZenFS未适配，使用RocksDB 8.11.3可以解决，直接按照README即可
 
 ``` shell
  git clone https://github.com/facebook/rocksdb.git
@@ -27,6 +28,14 @@ category: 工具与框架
 ```
 
 ### 2 NVMeVirt搭建
+
+```mermaid
+flowchart TD
+  A["RocksDB"] --> B["ZenFS"]
+  B --> C["ZNS 接口"]
+  C --> D["NVMeVirt 模拟器"]
+  D --> E["预留内存中的 ZNS 设备"]
+```
 
 #### 2.1 内存预留
 

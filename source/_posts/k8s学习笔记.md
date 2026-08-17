@@ -1,7 +1,7 @@
 ---
 title: k8s手册学习
 tag: [k8s]
-index_img: /img/covers/tools-practice.jpg
+index_img: /img/k8s.png
 date: 2024-01-12 20:00:00
 category: 工具与框架
 ---

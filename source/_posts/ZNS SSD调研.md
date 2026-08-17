@@ -1,7 +1,8 @@
 ---
 title: ZNS SSD与键值存储
 tag: [RocksDB, Compaction, Flush, KV store, LSM-tree, ZNS SSD]
-index_img: /img/covers/research-notes.jpg
+index_img: https://raw.githubusercontent.com/Yee686/Picbed/main/2024-05-11-16-24-13-ZNS_RocksDB.png
+mermaid: true
 sticky: 3
 date: 2024-05-20 20:50:00
 updated: 2025-04-22 20:50:00
@@ -41,6 +42,14 @@ math: true
 
 ---
 
+```mermaid
+flowchart TD
+  A["应用程序"] --> B["RocksDB"]
+  B --> C["ZenFS"]
+  C --> D["ZNS SSD"]
+  D --> E["顺序写入的 Zone"]
+```
+
 ### RocksDB 综述 (TOS 2021)
 
 #### 1 RocksDB简介
@@ -54,7 +63,7 @@ math: true
 - LSM-Tree是RocksDB的主要数据结构，主要操作：
   - **写入**：
     - 待写数据先被加入内存中的写入缓存**MemTable**和盘上的预写日志Write Ahead Log(**WAL**)
-    - MemTable基于跳表实现，一旦MemTable和WAL满则不可改变,并分配新的MemTablehe和WAL
+    - MemTable基于跳表实现，一旦MemTable和WAL满则不可改变,并分配新的MemTable和WAL
     - MemTable刷入Sorted String Table(**SSTable**)，SSTable是有序的并被分成了相同大小的block，每个块都有一个索引块用于二分搜索，丢弃已经刷入的MemTable和相关联的WAL
 ![2024-04-28-21-02-54-ZNS_RocksDB](https://raw.githubusercontent.com/Yee686/Picbed/main/2024-04-28-21-02-54-ZNS_RocksDB.png)
   - **压实**:
@@ -110,7 +119,7 @@ math: true
 - **ZNS 应用集成**
   - f2fs: segment$\rightarrow$section(zone),segment与zone对齐
   - ZenFS：
-    - SSTabel是不可变的，且按顺序写入，被当作整体单元擦除，是flash友好的
+    - SSTable是不可变的，且按顺序写入，被当作整体单元擦除，是flash友好的
     - zenfs将RocksDB数据文件映射为一组extent，extent是可以被顺序写的连续区域
 
 ---

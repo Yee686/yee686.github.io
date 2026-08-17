@@ -1,7 +1,8 @@
 ---
 title: RocksDB的Compaction/Flush分析
 tag: [RocksDB, Compaction, Flush, KV store, LSM-tree]
-index_img: /img/covers/code-analysis.jpg
+index_img: /img/covers/rocksdb-compaction-flush.jpg
+mermaid: true
 sticky: 2
 date: 2024-12-17 20:33:00
 updated: 2024-12-27 21:50:00
@@ -28,8 +29,8 @@ category: 代码分析
 - `DBImpl::FlushMemTableToOutputFile`: 将Memtable刷盘, 核心流程
   - 创建`FlushJob flush_job`
   - 调用成员方法`FlushJob::PickMemTable()`, 选择需要刷盘的memtable
-    - 获取该列族的imm_(imutable memtable)列表, 调用`MemTableList::PickMemtablesToFlush(...)`
-      - 遍历`current_->memlist_`, 将未flush的(!flush_in_grogress_)的memtable加入到`mems_`中, `mems_`中按时间升序排列
+    - 获取该列族的imm_(immutable memtable)列表, 调用`MemTableList::PickMemtablesToFlush(...)`
+      - 遍历`current_->memlist_`, 将未flush的(!flush_in_progress_)的memtable加入到`mems_`中, `mems_`中按时间升序排列
       - 不管`mems_`中有多少个memtable, 均有第一个`memtable`的`edit_`来记录该次flush的元数据
   - 调用成员方法`FlushJob::Run(...)`, 启动刷盘
     - 首先会检查是否需要`MemPurge()`, 即Memtable垃圾回收
@@ -53,7 +54,18 @@ category: 代码分析
 - 更新待刷新第一个Memtable的`FileMetaData`(保存整个FlushJob元数据)和入参`TableProperties`(生成L0层SSTable元数据)
 - 构建`OutputValidator`和`InternalIterator`检查新生成SSTable的有效性
 
-## Compactoion流程
+```mermaid
+flowchart TD
+  A["写入请求"] --> B["MemTable"]
+  B --> C["后台 Flush 调度"]
+  C --> D["BuildTable"]
+  D --> E["L0 SSTable"]
+  E --> F["Compaction 调度"]
+  F --> G["CompactionJob"]
+  G --> H["新的 SSTable"]
+```
+
+## Compaction流程
 
 ### 调度Flush/Compaction作业
 
@@ -70,8 +82,8 @@ category: 代码分析
   - 用于执行compaction文件选择的抽象类, RocksDB提供了`compaction_picker_level`/`compaction_picker_fifo`/`compaction_picker_universal`
   - 默认使用`LevelCompactionPicker`, 如下
     - 看是否需要Compaction接口`LevelCompactionPicker::NeedsCompaction()`
-      - 如果有超时TTL/被标记为Compaction的则返回Ture
-      - 自顶向下获取(已被排序)CompactionScore, 有大于1返回Ture, **CompactionScore事先由VersionStorageInfo::ComputeCompactionScore计算**
+      - 如果有超时TTL/被标记为Compaction的则返回true
+      - 自顶向下获取(已被排序)CompactionScore, 有大于1返回true, **CompactionScore事先由VersionStorageInfo::ComputeCompactionScore计算**
       - `VersionStorageInfo::ComputeCompactionScore`逻辑
         - 如果为L0: 统计该层文件数/文件大小, 得分=文件数/预先设定的阈值
         - L1开始: 未参与Compaction文件总大小/设定阈值,

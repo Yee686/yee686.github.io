@@ -1,7 +1,7 @@
 ---
 title: GNU Make与CMake
 tag: [c/c++, CMake, Make]
-index_img: /img/covers/tools-practice.jpg
+index_img: /img/toolchain.png
 date: 2024-09-26 20:00:00
 updated: 2025-01-06 16:00:00
 category: 工具与框架

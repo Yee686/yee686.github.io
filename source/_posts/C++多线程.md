@@ -1,7 +1,7 @@
 ---
 title: C和C++多线程
 tag: [c/c++, multithread]
-index_img: /img/covers/tools-practice.jpg
+index_img: /img/cppthread.png
 date: 2024-03-26 12:00:00
 category: 工具与框架
 ---

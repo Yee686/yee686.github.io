@@ -1,7 +1,7 @@
 ---
 title: docker手册学习
 tag: [docker]
-index_img: /img/covers/tools-practice.jpg
+index_img: /img/docker.png
 date: 2023-11-20 10:00:00
 category: 工具与框架
 ---
