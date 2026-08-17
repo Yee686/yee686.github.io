@@ -3,10 +3,10 @@
 ## Source: https://github.com/hexojs/hexo/
 
 # Site
-title: Yee's Blog
-subtitle: ''
-description: ''
-keywords:
+title: Yee · 存储系统笔记
+subtitle: '存储系统、RocksDB 与 ZNS SSD'
+description: '记录存储系统、RocksDB、ZNS SSD 与性能工程的源码分析、论文笔记和实践。'
+keywords: 存储系统,RocksDB,ZNS SSD,LSM-tree,KV Store,性能工程
 author: Yi Zhengye
 language: zh-CN
 timezone: 'Asia/Shanghai'
@@ -104,5 +104,5 @@ theme: fluid
 ## Docs: https://hexo.io/docs/one-command-deployment
 deploy:
   type: git
-  repo: https://github.com/Yee686/yee686.github.io
+  repo: https://github.com/Yee686/yee686.github.io.git
   branch: main

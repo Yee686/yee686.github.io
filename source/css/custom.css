@@ -1,0 +1,70 @@
+:root {
+  --accent-color: #0f766e;
+  --accent-soft: #e6fffb;
+}
+
+.navbar {
+  box-shadow: 0 1px 16px rgb(15 23 42 / 8%);
+}
+
+.navbar .navbar-brand {
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.banner-text {
+  text-shadow: 0 2px 18px rgb(0 0 0 / 45%);
+}
+
+.index-card {
+  margin-bottom: 2.25rem;
+  padding: 1.1rem;
+  border: 1px solid rgb(15 118 110 / 12%);
+  border-radius: 14px;
+  background: var(--board-bg-color);
+  box-shadow: 0 8px 24px rgb(15 23 42 / 6%);
+  transition: transform 160ms ease, box-shadow 160ms ease;
+}
+
+.index-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 14px 32px rgb(15 23 42 / 12%);
+}
+
+.index-card .index-img img {
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  border-radius: 10px;
+  object-fit: cover;
+}
+
+.index-card .index-header {
+  margin-top: 0.25rem;
+  font-size: 1.45rem;
+}
+
+.index-card .index-excerpt > div {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.index-card .index-btm .post-meta:last-child a:nth-of-type(n + 4) {
+  display: none;
+}
+
+.post-content {
+  line-height: 1.85;
+}
+
+@media (max-width: 767.98px) {
+  .index-card {
+    padding: 0.85rem;
+  }
+
+  .index-card .index-header {
+    margin-top: 1rem;
+    font-size: 1.25rem;
+  }
+}

@@ -83,7 +83,7 @@ fun_features:
   # 为 subtitle 添加打字机效果
   # Typing animation for subtitle
   typing:
-    enable: true
+    enable: false
 
     # 打印速度，数字越大越慢
     # Typing speed, the larger the number, the slower
@@ -132,7 +132,7 @@ dark_mode:
   # 默认的选项（当用户手动切换后则不再按照默认模式），选择 `auto` 会优先遵循 prefers-color-scheme，其次按用户本地时间 18 点到次日 6 点之间进入暗色模式
   # Default option (when the visitor switches manually, the default mode is no longer followed), choosing `auto` will give priority to prefers-color-scheme, and then enter the dark mode from 18:00 to 6:00 in the visitor's local time
   # Options: auto | light | dark
-  default: auto
+  default: light
 
 # 主题颜色配置，其他不生效的地方请使用自定义 css 解决，配色可以在下方链接中获得启发
 # Theme color, please use custom CSS to solve other colors, color schema can be inspired by the links below
@@ -238,6 +238,7 @@ custom_js:
 # 指定自定义 .css 文件路径，用法和 custom_js 相同
 # The usage is the same as custom_js
 custom_css:
+  - /css/custom.css
 
 # 网页访问统计
 # Analysis of website visitors
@@ -314,7 +315,7 @@ web_analytics:
 # Canonical, to specify a canonical URL for Google Search, need to set up `url: http://yourdomain.com` in hexo _config.yml
 # See: https://support.google.com/webmasters/answer/139066
 canonical:
-  enable: false
+  enable: true
 
 # 对页面中的图片和评论插件进行懒加载处理，可见范围外的元素不会提前加载
 # Lazy loading of images and comment plugin on the page
@@ -348,7 +349,7 @@ iconfont: //at.alicdn.com/t/c/font_1736178_k526ubmyhba.css
 navbar:
   # 导航栏左侧的标题，为空则按 hexo config 中 `title` 显示
   # The title on the left side of the navigation bar. If empty, it is based on `title` in hexo config
-  blog_title: "野格的博客"
+  blog_title: "Yee · 存储系统"
 
   # 导航栏毛玻璃特效，实验性功能，可能会造成页面滚动掉帧和抖动，部分浏览器不支持会自动不生效
   # Navigation bar frosted glass special animation. It is an experimental feature
@@ -369,7 +370,7 @@ navbar:
   menu:
     - { key: "home", link: "/", icon: "iconfont icon-home-fill", name: "首页" }
     - { key: "archive", link: "/archives/", icon: "iconfont icon-archive-fill", name: "归档" }
-    - { key: "category", link: "/categories/", icon: "iconfont icon-category-fill", name: "目录" }
+    - { key: "category", link: "/categories/", icon: "iconfont icon-category-fill", name: "分类" }
     - { key: "tag", link: "/tags/", icon: "iconfont icon-tags-fill", name: "标签" }
     - { key: "about", link: "/about/", icon: "iconfont icon-user-fill", name: "关于我" }
     #- { key: "links", link: "/links/", icon: "iconfont icon-link-fill" }
@@ -429,7 +430,7 @@ scroll_top_arrow:
 # Open Graph metadata
 # See: https://hexo.io/docs/helpers.html#open-graph
 open_graph:
-  enable: false
+  enable: true
   twitter_card:
   twitter_id:
   twitter_site:
@@ -445,11 +446,7 @@ open_graph:
 footer:
   # 页脚第一行文字的 HTML，建议保留 Fluid 的链接，用于向更多人推广本主题
   # HTML of the first line of the footer, it is recommended to keep the Fluid link to promote this theme to more people
-  content: '
-    <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a>
-    <i class="iconfont icon-love"></i>
-    <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a>
-  '
+  content: 'Yee · 存储系统、RocksDB 与 ZNS SSD 技术笔记'
 
   # 展示网站的 PV、UV 统计数
   # Display website PV and UV statistics
@@ -488,12 +485,12 @@ index:
   # 头图高度，屏幕百分比
   # Height ratio of banner image
   # Available: 0 - 100
-  banner_img_height: 100
+  banner_img_height: 62
 
   # 头图黑色蒙版的不透明度，available: 0 - 1.0，1 是完全不透明
   # Opacity of the banner mask, 1.0 is completely opaque
   # Available: 0 - 1.0
-  banner_mask_alpha: 0.3
+  banner_mask_alpha: 0.48
 
   # 首页副标题的独立设置
   # Independent config of home page subtitle
@@ -502,7 +499,7 @@ index:
 
     # 为空则按 hexo config.subtitle 显示
     # If empty, text based on `subtitle` in hexo config
-    text: "人人都是他自己的历史学家"
+    text: "存储系统 · RocksDB · ZNS SSD"
 
     # 通过 API 接口作为首页副标题的内容，必须返回的是 JSON 格式，如果请求失败则按 text 字段显示，该功能必须先开启 typing 打字机功能
     # Subtitle of the homepage through the API, must be returned a JSON. If the request fails, it will be displayed in `text` value. This feature must first enable the typing animation
@@ -557,7 +554,7 @@ index:
 post:
   banner_img: /img/banner/sea1.jpg
   banner_img_height: 70
-  banner_mask_alpha: 0.3
+  banner_mask_alpha: 0.45
 
   # 文章在首页的默认封面图，当没有指定 index_img 时会使用该图片，若两者都为空则不显示任何图片
   # Path of the default post cover when `index_img` is not set. If both are empty, no image will be displayed
@@ -594,7 +591,7 @@ post:
       awl: 2
       # 每分钟阅读字数，如果大部分是技术文章可适度调低
       # Words per minute
-      wpm: 60
+      wpm: 260
 
     # 浏览量计数
     # Number of visits
@@ -1022,7 +1019,7 @@ page404:
 # Links Page
 #---------------------------
 links:
-  enable: true
+  enable: false
   banner_img: /img/banner/station.jpg
   banner_img_height: 60
   banner_mask_alpha: 0.3
